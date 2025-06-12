@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException,Header ,status
 from pydantic import BaseModel
 
 from .db.connector import Client
