@@ -4,15 +4,15 @@
   "version": "1.0",
   "description": "Watches ChatGPT input and sends it to an API",
   "permissions": ["scripting"],
-  "host_permissions": ["https://chat.openai.com/*"],
+  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
-      "matches": ["https://chat.openai.com/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
   "icons": {
-    "128": "icon.png"
+    "128": "context.png"
   }
 }

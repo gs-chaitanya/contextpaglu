@@ -7,11 +7,10 @@ function debounce(fn, delay) {
 }
 
 function sendTextToAPI(text) {
-  fetch("https://httpbin.org/post", {  // <-- TEMP test endpoint
+  console.log("Sending to API:", text);
+  fetch("https://httpbin.org/post", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message: text })
   })
   .then(res => res.json())
@@ -19,26 +18,31 @@ function sendTextToAPI(text) {
   .catch(err => console.error("API error:", err));
 }
 
-function monitorChatGPTInput() {
-  const interval = setInterval(() => {
-    const textarea = document.querySelector('textarea');
+function observeChatGPTInput() {
+  const observer = new MutationObserver(() => {
+    const textarea = document.querySelector('form textarea');
 
-    if (textarea && !textarea.hasAttribute("data-watching")) {
-      textarea.setAttribute("data-watching", "true");
+    if (textarea && !textarea.dataset.watching) {
+      textarea.dataset.watching = "true";
 
       const debouncedSend = debounce((e) => {
         const text = e.target.value.trim();
         if (text) {
-            console.log("Detected input:", text); 
-            sendTextToAPI(text);
+          sendTextToAPI(text);
         }
       }, 1000);
 
       textarea.addEventListener("input", debouncedSend);
-      console.log("[Extension] Monitoring ChatGPT input.");
-      clearInterval(interval);
+      console.log("[Extension] Attached listener to ChatGPT textarea.");
     }
-  }, 500);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  console.log("[Extension] Watching for ChatGPT chatbox.");
 }
 
-monitorChatGPTInput();
+observeChatGPTInput();
