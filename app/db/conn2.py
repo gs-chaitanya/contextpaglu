@@ -4,6 +4,8 @@ import json
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
+import requests
+
 try:
     import pycouchdb
     COUCHDB_AVAILABLE = True
@@ -15,13 +17,20 @@ except ImportError:
 
 class Client:
     def __init__(self):
-        self.server = pycouchdb.Server("http://admin:admin123@localhost:5984/")
+        self.url="http://admin:admin123@localhost:5984"
+        self.server = pycouchdb.Server(self.url)
         self.sessionDB = self.server.database("session_db")
         self.chatDB = self.server.database("chat_db")
         self.contextDB = self.server.database("context_db")
         self.configDB = self.server.database("config_db")
         self._ensure_databases()
         print("✅ Connected to real CouchDB")
+
+
+    def query(self,relative_url):
+        resp=requests.get(self.url+relative_url)
+        if resp.status_code==200:
+            return resp.json()
 
     def _ensure_databases(self):
         """Ensure all required databases exist (only for real CouchDB)"""
@@ -64,7 +73,7 @@ class Client:
             print(f"❌ Error setting API key: {e}")
             return False
     
-    def get_api_key(self) -> Optional[str]:
+    def get_api_key(self) -> str:
         """Get stored AnythingLLM API key"""
         try:
             config_doc = self.configDB.get("anythingllm_config")
@@ -93,7 +102,7 @@ class Client:
             }
     ## ENHANCED SESSION MANAGEMENT
         
-    def create_session(self, session_name: str, workspace_slug: Optional[str] = None, context: Optional[str] = None) -> str:
+    def create_session(self, session_name: str, workspace_slug: str = None, context: str = None) -> str:
         """Create a new session with optional context and workspace"""
         session_id = str(uuid.uuid4())
         context_bucket_id = None
@@ -116,7 +125,7 @@ class Client:
         print(f"📝 Created session: {session_name} (ID: {session_id[:8]}...)")
         return doc["_id"]
     
-    def list_all_sessions(self, workspace_slug: Optional[str] = None, limit: int = 50, offset: int = 0) -> List[List]:
+    def list_all_sessions(self, workspace_slug: str = None, limit: int = 50, offset: int = 0) -> List[List]:
         """List sessions with optional workspace filtering"""
         try:
             if workspace_slug:
@@ -148,7 +157,7 @@ class Client:
             print(f"❌ Error listing sessions: {e}")
             return []
         
-    def get_session(self, session_id: str) -> Optional[Dict]:
+    def get_session(self, session_id: str) -> Dict:
         """Get session by ID"""
         try:
             return self.sessionDB.get(session_id)
@@ -219,7 +228,7 @@ class Client:
         print(f"📄 Created context bucket: {context_id[:8]}...")
         return doc["_id"]
     
-    def get_context(self, context_id: str) -> Optional[Dict]:
+    def get_context(self, context_id: str) -> Dict:
         """Get context by ID"""
         try:
             return self.contextDB.get(context_id)
@@ -254,7 +263,7 @@ class Client:
             print(f"❌ Error updating context for session: {e}")
             raise
     
-    def update_context_bucket(self, context_bucket_id: str, context: str, context_type: Optional[str] = None):
+    def update_context_bucket(self, context_bucket_id: str, context: str, context_type: str = None):
         """Update a context bucket directly"""
         try:
             context_doc = self.contextDB.get(context_bucket_id)
@@ -271,15 +280,17 @@ class Client:
     ## CHAT MANAGEMENT
     
     def store_chat(self, session_id: str, prompt: str, response: str, 
-                  response_time: int, tokens_used: Optional[int] = None, 
-                  sources: Optional[List] = None) -> str:
-        """Store a chat interaction with partitioned chat_id"""
-        chat_id = f"{session_id}:{str(uuid.uuid4())}"
+                  response_time: int, tokens_used: int = None, 
+                  sources: List = None) -> str:
+        """Store a chat interaction in partitioned chatDB using session_id as partition key"""
+        chat_uuid = str(uuid.uuid4())
+        # Format for partitioned db: partition_key:doc_id
+        chat_id = f"{session_id}:{chat_uuid}"
         
         chat_doc = {
             "_id": chat_id,
-            "chat_id": chat_id,
-            "session_id": session_id,
+            "chat_id": chat_uuid,  # Store the UUID part separately
+            "session_id": session_id,  # Partition key
             "prompt": prompt,
             "response": response,
             "response_time": response_time,
@@ -289,32 +300,19 @@ class Client:
         }
         
         doc = self.chatDB.save(chat_doc)
-        print(f"💬 Stored chat: {chat_id[:16]}... ({response_time}ms)")
+        print(f"💬 Stored chat in partition {session_id}: {chat_uuid[:8]}... ({response_time}ms)")
         return doc["_id"]
     
-    def get_session_chats(self, session_id: str, limit: int = 50, offset: int = 0) -> List[Dict]:
-        """Get all chats for a session (partitioned query)"""
-        try:
-            all_chats = []
-            for chat in self.chatDB.all():
-                doc = chat.get("doc", {})
-                if doc.get("session_id") == session_id:
-                    # Parse sources back from JSON
-                    try:
-                        doc["sources"] = json.loads(doc.get("sources", "[]"))
-                    except:
-                        doc["sources"] = []
-                    all_chats.append(doc)
-            
-            # Sort by timestamp
-            all_chats.sort(key=lambda x: x.get("timestamp", ""))
-            return all_chats[offset:offset + limit]
-        except Exception as e:
-            print(f"❌ Error getting session chats: {e}")
-            return []
+    def get_session_chats(self,session_id):
+        resp = self.query(f"/chat_db/_partition/{session_id}/_all_docs")["rows"]
+        
+        resp=[{"id":i["id"],"rev":i["value"]["rev"]} for i in resp]
+        
+        resp = requests.post(self.url+"/chat_db/_bulk_get",json={"docs":resp})
+        return [i["docs"][0]["ok"] for i in resp.json()["results"]]
     
-    def get_chat(self, chat_id: str) -> Optional[Dict]:
-        """Get specific chat by partitioned chat_id"""
+    def get_chat(self, chat_id: str) -> Dict:
+        """Get specific chat by partitioned chat_id (format: session_id:chat_uuid)"""
         try:
             chat = self.chatDB.get(chat_id)
             if chat and chat.get("sources"):
@@ -324,29 +322,32 @@ class Client:
                     chat["sources"] = []
             return chat
         except Exception as e:
-            print(f"❌ Chat {chat_id[:16]}... not found: {e}")
+            session_id = chat_id.split(":")[0] if ":" in chat_id else "unknown"
+            print(f"❌ Chat not found in partition {session_id}: {e}")
             return None
     
     def delete_session_chats(self, session_id: str):
-        """Delete all chats for a session"""
+        """Delete all chats for a session in the partition"""
         try:
             chats_to_delete = []
-            for chat in self.chatDB.all():
-                doc = chat.get("doc", {})
-                if doc.get("session_id") == session_id:
-                    chats_to_delete.append(doc)
+            # Find all documents in this partition
+            for doc in self.chatDB.all():
+                if doc.get("id", "").startswith(f"{session_id}:"):
+                    chats_to_delete.append(doc.get("doc"))
             
+            # Delete each chat document
             for chat_doc in chats_to_delete:
-                self.chatDB.delete(chat_doc)
+                if chat_doc:
+                    self.chatDB.delete(chat_doc)
             
             if chats_to_delete:
-                print(f"🗑️  Deleted {len(chats_to_delete)} chats for session: {session_id[:8]}...")
+                print(f"🗑️  Deleted {len(chats_to_delete)} chats from partition {session_id}")
         except Exception as e:
-            print(f"❌ Error deleting session chats: {e}")
+            print(f"❌ Error deleting chats from partition {session_id}: {e}")
 
     ## ANALYTICS
     
-    def get_analytics(self, session_id: Optional[str] = None, days: int = 7) -> List[Dict]:
+    def get_analytics(self, session_id: str = None, days: int = 7) -> List[Dict]:
         """Get usage analytics"""
         try:
             from datetime import datetime, timedelta
@@ -481,9 +482,8 @@ if __name__ == "__main__":
     print(f"📝 Test session created: {session_id[:8]}...")
     
     # Test configuration
-    client.set_api_key("test-api-key")
+    client.set_api_key("")
     config = client.get_config()
     print(f"🔧 Configuration: {config}")
     
     print("✅ All tests passed!")
-    
