@@ -1,1 +1,1 @@
-docker run couchdb
+docker start couchdb
