@@ -32,6 +32,28 @@ This is a simple FastAPI application.
    pip install -r requirements.txt
    ```
 
+4. **Configure the database**
+
+   - Install docker
+   - execute `db-setup.sh` (for installation only)
+   ```sh
+   chmod +x db-setup.sh
+   chmod +x db-setup.sh
+   chmod +x db-setup.sh
+
+   ./db-setup.sh
+   ```
+
+   - to start the db container
+   ```sh
+   ./db-run.sh
+   ```
+
+   - to stop the db container
+   ```sh
+   ./db-stop.sh
+   ```
+
 4. **Run the application**:
 
    ```sh
