@@ -1,0 +1,237 @@
+<div>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #1e293b;
+      line-height: 1.5;
+      min-width: 400px;
+      min-height: 600px;
+    }
+
+    .container {
+      padding: 40px 20px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 600px;
+      text-align: center;
+    }
+
+    .not-available-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 48px 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 350px;
+      width: 100%;
+    }
+
+    .icon-container {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: pulse 2s infinite;
+    }
+
+    .icon {
+      font-size: 36px;
+      color: white;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #1e293b, #475569);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .supported-sites {
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+
+    .supported-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sites-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .site-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .site-item:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .site-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .chatgpt { background: linear-gradient(135deg, #10a37f, #057a55); }
+    .claude { background: linear-gradient(135deg, #db7c47, #c2410c); }
+    .gemini { background: linear-gradient(135deg, #4285f4, #1a73e8); }
+
+    .site-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .floating-elements {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .floating-element {
+      position: absolute;
+      opacity: 0.1;
+      animation: float 6s infinite ease-in-out;
+    }
+
+    .floating-element:nth-child(1) {
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .floating-element:nth-child(2) {
+      top: 20%;
+      right: 10%;
+      animation-delay: 2s;
+    }
+
+    .floating-element:nth-child(3) {
+      bottom: 20%;
+      left: 15%;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 16px;
+      }
+      
+      .not-available-card {
+        padding: 32px 24px;
+      }
+
+      .sites-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .site-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: left;
+      }
+    }
+  </style>
+  
+  <div class="floating-elements">
+    <div class="floating-element">🧠</div>
+    <div class="floating-element">💭</div>
+    <div class="floating-element">⚡</div>
+  </div>
+
+  <div class="container">
+    <div class="not-available-card">
+      <div class="icon-container">
+        <div class="icon">🚫</div>
+      </div>
+      
+      <h1 class="title">Not Available</h1>
+      <p class="subtitle">
+        Context Weaver is not available for this page. Please navigate to a supported AI chat platform to use the extension.
+      </p>
+
+      <div class="supported-sites">
+        <div class="supported-title">Supported Platforms</div>
+        <div class="sites-grid">
+          <div class="site-item">
+            <div class="site-icon chatgpt">🤖</div>
+            <div class="site-name">ChatGPT</div>
+          </div>
+          <div class="site-item">
+            <div class="site-icon claude">🧠</div>
+            <div class="site-name">Claude</div>
+          </div>
+          <div class="site-item">
+            <div class="site-icon gemini">✨</div>
+            <div class="site-name">Gemini</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
