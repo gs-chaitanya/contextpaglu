@@ -1,18 +1,22 @@
 {
-  "manifest_version": 3,
-  "name": "ChatGPT Input Monitor",
+  "name": "extension",
   "version": "1.0",
-  "description": "Watches ChatGPT input and sends it to an API",
-  "permissions": ["scripting"],
-  "host_permissions": ["<all_urls>"],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
+  "manifest_version": 3,
+  "permissions": [
+    "scripting",
+    "webRequest",
+    "storage","tabs",
+    "webRequestAuthProvider",
+    "declarativeNetRequest"
   ],
-  "icons": {
-    "128": "context.png"
-  }
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["webScraperMutated.js","webScraperEntire.js","views/*.html", "scripts/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
