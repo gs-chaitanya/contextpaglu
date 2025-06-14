@@ -44,16 +44,11 @@ class ContextBucketUpdate(BaseModel):
 class AnythingLLMClient:
     def __init__(self):
         self.base_url = "http://localhost:3001/api/v1"
-        self.timeout = 30.0
+        self.timeout = 50.0
     
-    async def make_request(self, method: str, endpoint: str, data: Dict = None, stream: bool = False):
-        """Make request to AnythingLLM API"""
-        api_key = client.get_api_key()
-        if not api_key:
-            raise HTTPException(status_code=400, detail="API key not configured")
-        
+    async def make_request(self, method: str, endpoint: str, data: Dict = None, stream: bool = False):        
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer JQF2CXB-MJ3MTTH-N4E5ZAJ-R6T628Z",
             "Content-Type": "application/json"
         }
         
@@ -98,6 +93,26 @@ async def health_check():
         }
     }
 
+async def walterwhite(workspace_name):
+            
+    response = await anythingllm_client.make_request(
+        "POST",
+        f"/workspace/new",
+        {
+            "name": workspace_name,
+            "similarityThreshold": 0.7,
+            "openAiTemp": 0.7,
+            "openAiHistory": 20,
+            "openAiPrompt": "Custom prompt for responses",
+            "queryRefusalResponse": "Custom refusal message",
+            "chatMode": "chat",
+            "topN": 4
+        }
+    )
+    return response 
+
+
+
 @app.get("/config")
 async def get_config():
     """Get current configuration"""
@@ -123,6 +138,8 @@ async def configure_api_key(config: ApiKeyConfig):
 async def create_session(session_name):
     try:
         session_id = client.create_session(session_name)
+        workspace_name=f"{session_name}workspace"
+        await walterwhite(workspace_name)
         return {"session_id": session_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -189,4 +206,74 @@ async def get_all_chats(session_id: str):
         return {"response": resp}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/local/chat/{session_id}")
+# Chat endpoints
+async def send_chat_message( message: ChatMessage , session_id : str):
+    """Send a chat message to a session"""
+    local_llm_session_id = "90cc411d-fdd1-4732-88c9-60888e4b639f"
+    session_name=client.get_session_name(session_id)
+    workspace_name=f"{session_name}workspace"
+    try:
+        # Verify session exists
+        # session = client.get_session(session_id)
+        # if not session:
+        #     raise HTTPException(status_code=404, detail="Session not found")
+        
+        start_time = datetime.now()
+        
+        # Get context if available
+        context_message = message.prompt
+        # if session.get("context_bucket_id"):
+        #     context_data = client.get_context(session["context_bucket_id"])
+        #     if context_data and context_data.get("context"):
+        #         context_message = f"Context: {context_data['context']}\n\nUser: {message.prompt}"
+        
+        # Send to AnythingLLM
+        # workspace_slug = session.get("workspace_slug", "hi")
+        response = await anythingllm_client.make_request(
+            "POST",
+            f"/workspace/{workspace_name}/chat",
+            {"message": context_message, "mode": message.mode}
+        )
+        
+        response_time = int((datetime.now() - start_time).total_seconds() * 1000)
+        
+        # Parse response
+        response_data = response.json()
+        assistant_response = (
+            response_data.get("textResponse") or
+            response_data.get("text") or
+            response_data.get("response") or
+            response_data.get("message") or
+            response_data.get("content") or
+            "No response received"
+        )
+        
+        # Store chat
+        # chat_id = client.store_chat(
+        #     session_id,
+        #     message.prompt,
+        #     assistant_response,
+        #     response_time,
+        #     None,  # tokens_used
+        #     response_data.get("sources", [])
+        # )
+        
+        # Update session timestamp
+        # client.update_session_timestamp(session_id)
+        
+        return {
+            # "chat_id": chat_id,
+            "local_llm_session_id": session_id,
+            "prompt": message.prompt,
+            "response": assistant_response,
+            "response_time_ms": response_time,
+            "sources": response_data.get("sources", [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {str(e)}")
 

@@ -29,6 +29,14 @@ class Client:
         })
         return doc["_id"]
     
+    def get_session_name(self, session_id: str) -> str:
+    
+     try:
+        return self.sessionDB.get(session_id)["session_name"]
+     except Exception as e:
+        print(f"❌ Session with {session_id[:8]}.'s name is not found: {e}")
+        return None
+    
     def list_all_sessions(self, workspace_slug: str = None, limit: int = 50, offset: int = 0) -> List[List]:
         """List sessions with optional workspace filtering"""
         try:
