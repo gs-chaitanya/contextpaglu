@@ -1,7 +1,10 @@
+from datetime import datetime
 import json
+from typing import Dict, List
 import pycouchdb
 import uuid
 import requests
+import asyncio
 
 
 class Client:
@@ -26,7 +29,7 @@ class Client:
         })
         return doc["_id"]
     
-    def list_all_sessions(self, workspace_slug: Optional[str] = None, limit: int = 50, offset: int = 0) -> List[List]:
+    def list_all_sessions(self, workspace_slug: str = None, limit: int = 50, offset: int = 0) -> List[List]:
         """List sessions with optional workspace filtering"""
         try:
             if workspace_slug:
@@ -58,7 +61,7 @@ class Client:
             print(f"❌ Error listing sessions: {e}")
             return []
         
-    def get_session(self, session_id: str) -> Optional[Dict]:
+    def get_session(self, session_id: str) -> Dict:
         """Get session by ID"""
         try:
             return self.sessionDB.get(session_id)
@@ -129,7 +132,7 @@ class Client:
         print(f"📄 Created context bucket: {context_id[:8]}...")
         return doc["_id"]
     
-    def get_context(self, context_id: str) -> Optional[Dict]:
+    def get_context(self, context_id: str) -> Dict:
         """Get context by ID"""
         try:
             return self.contextDB.get(context_id)
@@ -150,7 +153,7 @@ class Client:
             return ""
     
     def update_context_for_session(self,session_id,new_context):
-        context_doc=self.get_context(session["context_bucket"])
+        context_doc=self.get_context(requests.session["context_bucket"])
         context_doc["context"]=new_context
         self.contextDB.save(context_doc)
     
