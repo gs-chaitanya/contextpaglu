@@ -26,40 +26,128 @@ class Client:
         })
         return doc["_id"]
     
-    def list_all_sessions(self):
-        return [[i["id"],i["doc"]["session_name"],i["doc"]["context_bucket"]] for i in list(self.sessionDB.all())]
-    
-    def update_session_name(self,session_id,new_session_name):
-        doc=self.sessionDB.get(session_id)
-        doc["session_name"]=new_session_name
-        self.sessionDB.save(doc)
-    
-    def delete_session(self,session_id):
-        session_doc=self.sessionDB.get(session_id)
-        context_doc=self.contextDB.get(session_doc["context_bucket"])
+    def list_all_sessions(self, workspace_slug: Optional[str] = None, limit: int = 50, offset: int = 0) -> List[List]:
+        """List sessions with optional workspace filtering"""
+        try:
+            if workspace_slug:
+                # Filter by workspace - in CouchDB we need to iterate
+                all_sessions = []
+                for session in self.sessionDB.all():
+                    doc = session.get("doc", {})
+                    if doc.get("workspace_slug") == workspace_slug:
+                        all_sessions.append([
+                            session["id"],
+                            doc.get("session_name", ""),
+                            doc.get("context_bucket_id", ""),
+                            doc.get("workspace_slug", ""),
+                            doc.get("updated_at", "")
+                        ])
+                # Sort by updated_at and apply pagination
+                all_sessions.sort(key=lambda x: x[4], reverse=True)
+                return all_sessions[offset:offset + limit]
+            else:
+                sessions = list(self.sessionDB.all())[offset:offset + limit]
+                return [[
+                    i["id"],
+                    i["doc"].get("session_name", ""),
+                    i["doc"].get("context_bucket_id", ""),
+                    i["doc"].get("workspace_slug", ""),
+                    i["doc"].get("updated_at", "")
+                ] for i in sessions]
+        except Exception as e:
+            print(f"❌ Error listing sessions: {e}")
+            return []
         
-        self.sessionDB.delete(session_doc)
-        self.contextDB.delete(context_doc)
+    def get_session(self, session_id: str) -> Optional[Dict]:
+        """Get session by ID"""
+        try:
+            return self.sessionDB.get(session_id)
+        except Exception as e:
+            print(f"❌ Session {session_id[:8]}... not found: {e}")
+            return None
+        
+    def update_session_name(self, session_id: str, new_session_name: str):
+        """Update session name"""
+        try:
+            doc = self.sessionDB.get(session_id)
+            doc["session_name"] = new_session_name
+            doc["updated_at"] = datetime.now().isoformat()
+            self.sessionDB.save(doc)
+            print(f"✏️  Updated session name: {new_session_name}")
+        except Exception as e:
+            print(f"❌ Error updating session name: {e}")
+            raise
+    
+    def update_session_timestamp(self, session_id: str):
+        """Update session's last activity timestamp"""
+        try:
+            doc = self.sessionDB.get(session_id)
+            doc["updated_at"] = datetime.now().isoformat()
+            self.sessionDB.save(doc)
+        except Exception as e:
+            print(f"❌ Error updating session timestamp: {e}")
+    
+    def delete_session(self, session_id: str):
+        """Delete session and associated context"""
+        try:
+            session_doc = self.sessionDB.get(session_id)
+            
+            # Delete associated context if exists
+            if session_doc.get("context_bucket_id"):
+                try:
+                    context_doc = self.contextDB.get(session_doc["context_bucket_id"])
+                    self.contextDB.delete(context_doc)
+                    print(f"🗑️  Deleted context bucket: {session_doc['context_bucket_id'][:8]}...")
+                except:
+                    pass  # Context might already be deleted
+            
+            # Delete all chats for this session
+            self.delete_session_chats(session_id)
+            
+            # Delete session
+            self.sessionDB.delete(session_doc)
+            print(f"🗑️  Deleted session: {session_id[:8]}...")
+        except Exception as e:
+            print(f"❌ Error deleting session: {e}")
+            raise
         
    
     
-    ## CONTEXT
+    ## ENHANCED CONTEXT MANAGEMENT
     
-    def create_new_context(self):
-        doc=self.contextDB.save({
-            "context":""
+    def create_new_context(self, context: str = "", context_type: str = "general") -> str:
+        """Create a new context bucket"""
+        context_id = str(uuid.uuid4())
+        doc = self.contextDB.save({
+            "_id": context_id,
+            "context_bucket_id": context_id,
+            "context": context,
+            "context_type": context_type,
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
         })
+        print(f"📄 Created context bucket: {context_id[:8]}...")
         return doc["_id"]
     
-    def get_context(self,context_id):
-        doc=self.contextDB.get(context_id)
-        return doc
+    def get_context(self, context_id: str) -> Optional[Dict]:
+        """Get context by ID"""
+        try:
+            return self.contextDB.get(context_id)
+        except Exception as e:
+            print(f"❌ Context {context_id[:8]}... not found: {e}")
+            return None
     
-    def get_context_for_session(self,session_id):
-        self.sessionDB.get(session_id)
-        session_doc=self.sessionDB.get(session_id)
-        context=self.get_context(session_doc["context_bucket"])["context"]
-        return context
+    def get_context_for_session(self, session_id: str) -> str:
+        """Get context content for a session"""
+        try:
+            session_doc = self.sessionDB.get(session_id)
+            if session_doc.get("context_bucket_id"):
+                context = self.get_context(session_doc["context_bucket_id"])
+                return context.get("context", "") if context else ""
+            return ""
+        except Exception as e:
+            print(f"❌ Error getting context for session: {e}")
+            return ""
     
     def update_context_for_session(self,session_id,new_context):
         context_doc=self.get_context(session["context_bucket"])

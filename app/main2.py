@@ -182,11 +182,4 @@ async def evaluate_context(newchat: str = Header(None)):
         raise HTTPException(status_code=400, detail="newchat header is required")
     return {"status": "Context evaluated", "context": newchat}
 
-@app.get("/get_all_chats/{session_id}")
-async def get_all_chats(session_id: str):
-    try:
-        resp = client.get_all_chats_by_session_id("fe51eea2c06c4e3582552726236d7dd4")
-        return {"response": resp}
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
 
