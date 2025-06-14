@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<div class="welcome-container">
+  <div class="welcome-content">
+    <div class="logo-section">
+      <div class="logo-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7V17C2 18.1 2.9 19 4 19H20C21.1 19 22 18.1 22 17V7L12 2ZM20 17H4V8.2L12 4.2L20 8.2V17Z" fill="currentColor"/>
+          <path d="M8 14H10V16H8V14ZM11 14H13V16H11V14ZM14 14H16V16H14V14Z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h1>Context Weaver</h1>
+      <p class="subtitle">AI Conversation Management</p>
+    </div>
+    
+    <div class="detection-status">
+      <div class="status-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10.9 2 10.9 2 12 2ZM21 9V7L15 7.5V5.5C15 4.4 14.6 3.4 13.9 2.7L12 1L10.1 2.7C9.4 3.4 9 4.4 9 5.5V7.5L3 7V9H21Z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h2>New Conversation Detected</h2>
+      <p>Initializing context analysis...</p>
+    </div>
+    
+    <div class="loading-section">
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+.welcome-container {
+  width: 380px;
+  height: 520px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+.welcome-content {
+  text-align: center;
+  z-index: 2;
+  position: relative;
+  padding: 40px 30px;
+}
+
+.logo-section {
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  margin-bottom: 16px;
+  color: #64b5f6;
+  display: flex;
+  justify-content: center;
+}
+
+.welcome-content h1 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 40px 0;
+  font-weight: 300;
+}
+
+.detection-status {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-icon {
+  color: #4caf50;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.detection-status h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  color: white;
+}
+
+.detection-status p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: 300;
+}
+
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #64b5f6, #42a5f5);
+  border-radius: 2px;
+  animation: progress 2.5s ease-in-out;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  background: #64b5f6;
+  border-radius: 50%;
+  animation: dot-bounce 1.4s infinite both;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+</style>
