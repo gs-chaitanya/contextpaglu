@@ -1,7 +1,3 @@
-Here is a complete `README.md` for your `pycouchdb`-based client module:
-
----
-
 ````markdown
 # 🛠️ CouchDB Client Wrapper with PyCouchDB
 
