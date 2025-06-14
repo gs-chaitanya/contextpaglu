@@ -5,7 +5,7 @@
   "permissions": [
     "scripting",
     "webRequest",
-    "storage","tabs",
+    "storage","tabs", "activeTab",
     "webRequestAuthProvider",
     "declarativeNetRequest"
   ],

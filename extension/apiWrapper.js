@@ -138,9 +138,9 @@ export async function fetchAllSessions() {
   return {
     success: true,
     sessions: [
-      { sessionId: "abc123", sessionName: "AI Basics" },
-      { sessionId: "def456", sessionName: "Philosophy Chat" },
-      { sessionId: "ghi789", sessionName: "Code Review Session" }
+      { sessionName: "abc123", context: "AI Basics" },
+      { sessionName: "def456", context: "Philosophy Chat" },
+      { sessionName: "ghi789", context: "Code Review Session" }
     ]
   };
   // Uncomment below for real API call
@@ -157,5 +157,41 @@ export async function fetchAllSessions() {
   }
   */
 }
+export async function postAppendSession(service, conversationId, sessionId) {
+  // Dummy response for testing purposes
+  return {
+    success: true,
+    message: "Dummy session append successful",
+    service,
+    conversationId,
+    sessionId,
+  };
+
+  // Uncomment and use the real API call when backend is ready
+  /*
+  try {
+    const response = await fetch("http://localhost:8000/append_session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        service,
+        conversationId,
+        sessionId,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const data = await response.json();
+    return data; // expecting something like { "success": true, "message": "...", ... }
+  } catch (error) {
+    console.error("Append session API call failed:", error);
+    return { success: false, error: error.message };
+  }
+  */
+}
+
 
 

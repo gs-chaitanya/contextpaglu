@@ -1,3 +1,76 @@
+    
+    
+    // Copy functionality
+    function copyToClipboard(text, button) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.querySelector('.copy-button-text').textContent;
+        const originalIcon = button.querySelector('.copy-button-icon').textContent;
+        
+        button.classList.add('copied');
+        button.querySelector('.copy-button-text').textContent = 'Copied!';
+        button.querySelector('.copy-button-icon').textContent = '✓';
+        
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.querySelector('.copy-button-text').textContent = originalText;
+          button.querySelector('.copy-button-icon').textContent = originalIcon;
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    }
+
+    // Context copy button
+    document.getElementById('copy-context-btn').addEventListener('click', function() {
+      const contextContent = document.getElementById('context-block').textContent;
+      copyToClipboard(contextContent, this);
+    });
+
+    document.getElementById('copy-sessions-btn').addEventListener('click', function() {
+      const contextContent = document.getElementById('session-context').textContent;
+      copyToClipboard(contextContent, this);
+    });
+    
+
+    // Update session count when sessions are loaded
+    function updateSessionCount() {
+      const sessionItems = document.querySelectorAll('#session-list li');
+      const countElement = document.getElementById('session-count');
+      if (countElement) {
+        countElement.textContent = sessionItems.length;
+      }
+    }
+
+    // Observer to watch for session list changes
+    const observer = new MutationObserver(updateSessionCount);
+    const sessionList = document.getElementById('session-list');
+    if (sessionList) {
+      observer.observe(sessionList, { childList: true });
+    }
+
+    // Format degradation score as percentage
+    function formatDegradationScore() {
+      const scoreElement = document.getElementById('degradation-score');
+      if (scoreElement && scoreElement.textContent.includes('Degradation:')) {
+        const value = scoreElement.textContent.match(/[\d.]+/);
+        if (value) {
+          const percentage = Math.round((1 - parseFloat(value[0])) * 100);
+          scoreElement.textContent = `${percentage}%`;
+        }
+      }
+    }
+
+    // Monitor for degradation score updates
+    const scoreObserver = new MutationObserver(formatDegradationScore);
+    const scoreElement = document.getElementById('degradation-score');
+    if (scoreElement) {
+      scoreObserver.observe(scoreElement, { childList: true, characterData: true, subtree: true });
+    }
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      updateSessionCount();
+    });
+
 // Query the active tab in the current window
 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   if (tabs[0]?.id) {
