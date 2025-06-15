@@ -2,13 +2,20 @@
 export const fetchCards = async () => {
   try {
     // Replace with your actual API endpoint
-    const response = await fetch("https://your-api-endpoint.com/cards");
+    const response = await fetch("http://localhost:8000/list_all_sessions");
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const respJSON = await response.json();
+
+    const data = respJSON["sessions"].map((item) => ({
+      session_id: item[0],
+      name: item[1],
+      context: item[2]
+    }))
+
     return data;
   } catch (error) {
     console.error("Error fetching cards:", error);

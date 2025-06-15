@@ -59,7 +59,7 @@
 @media (min-width: 1200px) {
   .cards-grid {
     grid-template-columns: repeat(3, 1fr);
-    max-width: 1400px;
+    width: 986px;
     margin: 0 auto 2rem;
     gap: 2rem;
   }
@@ -72,8 +72,9 @@
   
   .cards-grid {
     gap: 2.5rem;
+    width:1200px;
   }
-  
+  width:1200px;
   .footer {
     font-size: 1rem;
   }
