@@ -151,6 +151,23 @@ async def configure_api_key(config: ApiKeyConfig):
         raise HTTPException(status_code=500, detail="Failed to configure API key")
 
 
+@app.get("/get_personal_context")
+def get_personal_context():
+    try:
+        context = client.get_personal_context()
+        return {"context": context}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/update_personal_context")
+async def update_personal_context(context):
+    """Update personal context"""
+    try:
+        client.update_personal_context(context)
+        return {"message": "Personal context updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/create_session/{session_name}")
 async def create_session(session_name):
     try:
