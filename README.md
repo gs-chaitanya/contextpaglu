@@ -78,4 +78,7 @@ requirements.txt
 
 ## License
 
+#PPT Link
+https://www.canva.com/design/DAGqZbp62DE/RFtwXns3Oc3qmuJTKW67vg/edit
+
 MIT
