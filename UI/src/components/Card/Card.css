@@ -1,0 +1,110 @@
+.card {
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 22px;
+  font-weight: 500;
+  cursor: pointer;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  z-index: 1;
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Copy button styles */
+.copy-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  opacity: 0; /* Hidden by default */
+  color: white;
+}
+
+.card:hover .copy-button {
+  opacity: 1; /* Show on card hover */
+}
+
+.copy-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
+.copy-button.copied {
+  background-color: rgba(46, 160, 115, 0.8);
+  opacity: 1;
+}
+
+.copy-icon,
+.check-icon {
+  transition: all 0.2s ease;
+}
+
+/* Card color variants */
+.card-green {
+  background: linear-gradient(135deg, #0d503c, #2ea073);
+}
+
+.card-blue {
+  background: linear-gradient(135deg, #0d4a6e, #1b92d1);
+}
+
+.card-orange {
+  background: linear-gradient(135deg, #744210, #b7791f);
+}
+
+.card-red {
+  background: linear-gradient(135deg, #702a2a, #c53030);
+}
+
+.card-purple {
+  background: linear-gradient(135deg, #45276d, #9061f9);
+}
+
+/* Additional colors if needed */
+.card-teal {
+  background: linear-gradient(135deg, #0d5054, #0ca5b0);
+}
+
+.card-pink {
+  background: linear-gradient(135deg, #702a57, #d6409f);
+}
