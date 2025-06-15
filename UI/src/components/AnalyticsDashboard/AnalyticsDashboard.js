@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import "./AnalyticsDashboard.css";
+import { translateText } from "../../api/translateService";
 
 const AnalyticsDashboard = ({ onClose, dashboardContent }) => {
   const modalRef = useRef(null);
@@ -96,6 +97,7 @@ const AnalyticsDashboard = ({ onClose, dashboardContent }) => {
                 alignItems: "center",
                 justifyContent: "center",
               }}
+
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -113,6 +115,7 @@ const AnalyticsDashboard = ({ onClose, dashboardContent }) => {
                 flexDirection: "column",
                 height: "full",
                 justifyContent: "center",
+               
               }}
             >
               <div style={{'padding':"10px"}}>
