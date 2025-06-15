@@ -13,11 +13,19 @@ class Client:
         self.server=pycouchdb.Server(self.url)
         self.sessionDB=self.server.database("session_db")
         self.chatDB=self.server.database("chat_db")
+        self.personalContextDB=self.server.database("personal_context_db")
     
     def query(self,relative_url):
         resp=requests.get(self.url+relative_url)
         if resp.status_code==200:
             return resp.json()
+
+    def get_personal_context(self):
+        doc=self.personalContextDB.get("1")
+        return doc
+    
+    def update_personal_context(self,new_doc):
+        self.sessionDB.save(new_doc)
 
     ## SESSIONS
         

@@ -11,8 +11,21 @@ docker run -d \
 curl -X PUT http://admin:admin123@localhost:5984/session_db \
      -H "Content-Type: application/json" \
 
-curl -X PUT http://admin:admin123@localhost:5984/context_db \
+curl -X PUT http://admin:admin123@localhost:5984/personal_context_db \
      -H "Content-Type: application/json" \
+
+curl -X POST http://admin:admin123@localhost:5984/personal_context_db \
+  -H "Content-Type: application/json" \
+  -d '{
+    "_id": "1",
+    "name": "",
+    "age": "",
+    "city": "",
+     "country": "",
+     "occupation": "",
+     "bio":"",
+     "context:""
+  }'
 
 curl -X PUT http://admin:admin123@localhost:5984/chat_db \
      -H "Content-Type: application/json" \
