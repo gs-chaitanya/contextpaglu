@@ -8,6 +8,8 @@ import asyncio
 from datetime import datetime
 import uuid
 from .db.connector import Client
+from context_engine import init_model, encode_text, semantic_coherence
+
 
 app = FastAPI(
     title="Enhanced AnythingLLM FastAPI Server",
@@ -44,7 +46,7 @@ class ContextBucketUpdate(BaseModel):
 class AnythingLLMClient:
     def __init__(self):
         self.base_url = "http://localhost:3001/api/v1"
-        self.timeout = 50.0
+        self.timeout = 36000.0
     
     async def make_request(self, method: str, endpoint: str, data: Dict = None, stream: bool = False):        
         headers = {

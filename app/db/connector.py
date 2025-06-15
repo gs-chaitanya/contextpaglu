@@ -34,7 +34,7 @@ class Client:
      try:
         return self.sessionDB.get(session_id)["session_name"]
      except Exception as e:
-        print(f"❌ Session with {session_id[:8]}.'s name is not found: {e}")
+        print(f" Session with {session_id[:8]}.'s name is not found: {e}")
         return None
     
     def list_all_sessions(self, workspace_slug: str = None, limit: int = 50, offset: int = 0) -> List[List]:
@@ -66,7 +66,7 @@ class Client:
                     i["doc"].get("updated_at", "")
                 ] for i in sessions]
         except Exception as e:
-            print(f"❌ Error listing sessions: {e}")
+            print(f" Error listing sessions: {e}")
             return []
         
     def get_session(self, session_id: str) -> Dict:
@@ -74,7 +74,7 @@ class Client:
         try:
             return self.sessionDB.get(session_id)
         except Exception as e:
-            print(f"❌ Session {session_id[:8]}... not found: {e}")
+            print(f" Session {session_id[:8]}... not found: {e}")
             return None
         
     def update_session_name(self, session_id: str, new_session_name: str):
@@ -84,9 +84,9 @@ class Client:
             doc["session_name"] = new_session_name
             doc["updated_at"] = datetime.now().isoformat()
             self.sessionDB.save(doc)
-            print(f"✏️  Updated session name: {new_session_name}")
+            print(f"  Updated session name: {new_session_name}")
         except Exception as e:
-            print(f"❌ Error updating session name: {e}")
+            print(f" Error updating session name: {e}")
             raise
     
     def update_session_timestamp(self, session_id: str):
@@ -96,7 +96,7 @@ class Client:
             doc["updated_at"] = datetime.now().isoformat()
             self.sessionDB.save(doc)
         except Exception as e:
-            print(f"❌ Error updating session timestamp: {e}")
+            print(f" Error updating session timestamp: {e}")
     
     def delete_session(self, session_id: str):
         """Delete session and associated context"""
@@ -108,7 +108,7 @@ class Client:
                 try:
                     context_doc = self.contextDB.get(session_doc["context_bucket_id"])
                     self.contextDB.delete(context_doc)
-                    print(f"🗑️  Deleted context bucket: {session_doc['context_bucket_id'][:8]}...")
+                    print(f"  Deleted context bucket: {session_doc['context_bucket_id'][:8]}...")
                 except:
                     pass  # Context might already be deleted
             
@@ -117,9 +117,9 @@ class Client:
             
             # Delete session
             self.sessionDB.delete(session_doc)
-            print(f"🗑️  Deleted session: {session_id[:8]}...")
+            print(f"  Deleted session: {session_id[:8]}...")
         except Exception as e:
-            print(f"❌ Error deleting session: {e}")
+            print(f" Error deleting session: {e}")
             raise
         
    
@@ -137,7 +137,7 @@ class Client:
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat()
         })
-        print(f"📄 Created context bucket: {context_id[:8]}...")
+        print(f" Created context bucket: {context_id[:8]}...")
         return doc["_id"]
     
     def get_context(self, context_id: str) -> Dict:
@@ -145,7 +145,7 @@ class Client:
         try:
             return self.contextDB.get(context_id)
         except Exception as e:
-            print(f"❌ Context {context_id[:8]}... not found: {e}")
+            print(f" Context {context_id[:8]}... not found: {e}")
             return None
     
     def get_context_for_session(self, session_id: str) -> str:
@@ -157,7 +157,7 @@ class Client:
                 return context.get("context", "") if context else ""
             return ""
         except Exception as e:
-            print(f"❌ Error getting context for session: {e}")
+            print(f" Error getting context for session: {e}")
             return ""
     
     def update_context_for_session(self,session_id,new_context):
