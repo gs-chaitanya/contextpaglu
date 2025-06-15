@@ -24,9 +24,29 @@ class Client:
     def create_session(self,session_name):
         doc=self.sessionDB.save({
             "session_name":session_name,
-            "context":""
+            "context":"",
+            "attached_chats":[]
         })
         return doc["_id"]
+    
+    def create_new_session_from_chat(self,session_name,service_name,conversation_id):
+        doc=self.sessionDB.save({
+            "session_name":session_name,
+            "context":"",
+            "attached_chats":[{
+                "service_name": service_name,
+                "conversation_id": conversation_id
+            }]
+        })
+        return doc["_id"]
+    
+    def find_session_by_chat(self, service_name, conversation_id):
+        for doc in self.sessionDB.all():
+            for chat in doc.get('attached_chats', []):
+                if chat.get('service_name') == service_name and chat.get('conversation_id') == conversation_id:
+                    return doc['_id']
+        return None
+        
     
     def get_session_name(self, session_id: str) -> str:
     
