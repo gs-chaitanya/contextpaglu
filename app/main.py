@@ -8,6 +8,8 @@ import json
 import asyncio
 from datetime import datetime
 import uuid
+
+from app.context_engine import encode_text, init_model, semantic_coherence
 from .db.connector import Client
 # from .context_engine import init_model, encode_text, semantic_coherence
 
@@ -188,6 +190,7 @@ async def list_all_sessions():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 @app.post("/update_session_name/{session_id}")
 async def update_session_name(session_id: str, payload: SessionRename):
     try:
@@ -206,38 +209,36 @@ async def delete_session(session_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# @app.post("/get_degradation/{session_id}")
-# async def get_context(session_id: str, payload: ChatResponse):
-#     """Get context for a session"""
-#     if not payload.prompt:
-#         raise HTTPException(status_code=400, detail="Prompt is required")
+@app.get("/get_degradation/{session_id}")
+async def get_context(session_id: str):
+    """Get context for a session"""
 
-#     try:
-#         # Initialize model and encode prompt
-#         model = init_model()
-#         current_embedding = encode_text(payload.prompt, model)
+    try:
+        # Initialize model and encode prompt
+        prompt = client.get_last_chat_for_session(session_id)
+        model = init_model()
+        current_embedding = encode_text(prompt, model)
         
-#         # Get global context and encode it if it's text
-#         global_context = client.get_context_for_session(session_id)
-#         if isinstance(global_context, str):
-#             global_context = encode_text(global_context, model)
-#         elif isinstance(global_context, list) and len(global_context) > 0:
-#             global_context = encode_text(" ".join(global_context), model)
-#         else:
-#             raise HTTPException(status_code=400, detail="Invalid context format")
+        # Get global context and encode it if it's text
+        global_context = client.get_context_for_session(session_id)
+        if isinstance(global_context, str):
+            global_context = encode_text(global_context, model)
+        elif isinstance(global_context, list) and len(global_context) > 0:
+            global_context = encode_text(" ".join(global_context), model)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid context format")
 
-#         # Calculate semantic coherence
-#         coherence_score = semantic_coherence(current_embedding, global_context)
-#         degradation_score = 1.0 - coherence_score  # Inverse of coherence
+        # Calculate semantic coherence
+        coherence_score = semantic_coherence(current_embedding, global_context)
+        degradation_score = 1.0 - coherence_score  # Inverse of coherence
 
-#         #threshold = 0.5  # Example threshold for coherence
+        #threshold = 0.5  # Example threshold for coherence
 
-#         return {
-#             "prompt": payload.prompt,
-#             "degradation_score": degradation_score
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "degradation_score": degradation_score
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/get_context/{session_id}")
 async def get_context(session_id: str):
@@ -313,7 +314,7 @@ async def send_chat_message( message: ChatMessage , session_id : str):
         
         # Update session timestamp
         # client.update_session_timestamp(session_id)
-        client.update_context_for_session(session_id, assistant_response)
+        client.update_context_for_session(session_id, assistant_response, message.prompt)
         return {
             # "chat_id": chat_id,
             "local_llm_session_id": session_id,

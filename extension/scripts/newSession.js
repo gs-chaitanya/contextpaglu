@@ -82,12 +82,11 @@ createBtn.addEventListener("click", async () => {
       // Create a new session
       response = await createNewSession(sessionName, conversationId, service);
       if (!response.success) return alert("Failed to create session: " + (response.error || "Unknown error"));
-      sessionId = response.sessionId;
       const key = `${service}:${conversationId}`;
-      console.log("Creating new session with key:", key, "and sessionId:", sessionId);
+      console.log("Creating new session with key:", key, "and sessionId:", response.sessionId);
 
       chrome.storage.local.set({
-        [key]: sessionId,
+        [key]: response.sessionId,
         service,
         conversationId,
         sessionName,
@@ -106,7 +105,6 @@ createBtn.addEventListener("click", async () => {
       // if (!response.success) return alert("Failed to append session: " + (response.error || "Unknown error"));
 
       const key = `${service}:${conversationId}`;
-      sessionId = response.sessionId;
       chrome.storage.local.set({
         [key]: sessionId,
         service: service,

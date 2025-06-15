@@ -60,7 +60,7 @@ if (copyContextBtn) {
         const value = scoreElement.textContent.match(/[\d.]+/);
         if (value) {
           const percentage = Math.round((1 - parseFloat(value[0])) * 100);
-          scoreElement.textContent = `${percentage}%`;
+          scoreElement.textContent = `${percentage}`;
         }
       }
     }

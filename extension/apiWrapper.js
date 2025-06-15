@@ -71,12 +71,12 @@ export async function postConversationUpload(sessionId, conversationJSON) {
         mode: "chat"
       }),
     });
-
+    let data;
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error:", errorData);
     } else {
-      const data = await response.json();
+       data = await response.json();
       console.log("Assistant response:", data.response);
     }
 
@@ -85,11 +85,10 @@ export async function postConversationUpload(sessionId, conversationJSON) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
     return {
       success: true,
       message: "Conversation upload successful",
-      entriesUploaded: conversationJSON.length,
+      entriesUploaded: data.length,
       response: data.response,
       chat_data: data
     };
@@ -112,6 +111,19 @@ export async function getContextAndDegradation(sessionId) {
     if (!contextResponse.ok) throw new Error("Failed to fetch context");
     
     const contextData = await contextResponse.json();
+
+
+    // Get context
+    const degradationResponse = await fetch(`http://localhost:8000/get_degradation/${sessionId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!degradationResponse.ok) throw new Error("Failed to fetch degradation");
+    
+    const degradationData = await degradationResponse.json();
     
     // For degradation, we need a sample prompt to calculate it
     // Since there's no direct degradation endpoint without a prompt, we'll return a placeholder
@@ -120,7 +132,7 @@ export async function getContextAndDegradation(sessionId) {
       success: true,
       message: "Context and degradation fetch successful",
       context: contextData.context,
-      degradationFactor: 0.0 // Placeholder - actual calculation requires a prompt
+      degradationFactor: degradationData.degradation_score // Placeholder - actual calculation requires a prompt
     };
     
   } catch (error) {

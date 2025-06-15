@@ -33,6 +33,7 @@ class Client:
         doc=self.sessionDB.save({
             "session_name":session_name,
             "context":"",
+            "last_chat" : "",
             "attached_chats":[{
                 "service_name": service_name,
                 "conversation_id": conversation_id
@@ -141,10 +142,20 @@ class Client:
         except Exception as e:
             print(f" Error getting context for session: {e}")
             return ""
+        
+    def get_last_chat_for_session(self, session_id: str) -> str:
+        """Get context content for a session"""
+        try:
+            session_doc = self.sessionDB.get(session_id)
+            return session_doc["last_chat"]
+        except Exception as e:
+            print(f" Error getting context for session: {e}")
+            return ""
     
-    def update_context_for_session(self,session_id,new_context):
+    def update_context_for_session(self,session_id,new_context, lastChat=""):
         session_id=self.sessionDB.get(session_id)
         session_id["context"]=new_context
+        session_id["last_chat"] = lastChat
         self.sessionDB.save(session_id)
     
     
