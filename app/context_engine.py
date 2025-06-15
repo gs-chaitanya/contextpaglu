@@ -41,25 +41,25 @@ def coherence_patterns(current_embedding, context_embeddings):
 
 #--------------------------------
 # Initialize the model
-model = init_model()
+# model = init_model()
 
-# Define a set of example texts
-texts = [
-    """The quick brown fox jumps over the lazy dog.
-    The auburn fox leaps across the idle hound.
-    Nature inspires creativity in countless ways.
-    agile brown fox jumps swiftly over lazy dogs."""
-]
-# Encode all the texts using our model.
-embeddings = [encode_text(text, model) for text in texts]
-# Create a global context by averaging the embeddings
-global_context = torch.stack(embeddings).mean(dim=0)
+# # Define a set of example texts
+# texts = [
+#     """The quick brown fox jumps over the lazy dog.
+#     The auburn fox leaps across the idle hound.
+#     Nature inspires creativity in countless ways.
+#     agile brown fox jumps swiftly over lazy dogs."""
+# ]
+# # Encode all the texts using our model.
+# embeddings = [encode_text(text, model) for text in texts]
+# # Create a global context by averaging the embeddings
+# global_context = torch.stack(embeddings).mean(dim=0)
 
-# Example usage
-response = "negra aroyo lane."
-response_embedding = encode_text(response, model)
-sem_coh_score = semantic_coherence(response_embedding, global_context)
-print("Semantic Coherence: ", sem_coh_score)
+# # Example usage
+# response = "negra aroyo lane."
+# response_embedding = encode_text(response, model)
+# sem_coh_score = semantic_coherence(response_embedding, global_context)
+# print("Semantic Coherence: ", sem_coh_score)
 # -------------------------------------------------------------------------
 
 
