@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { fetchCards } from "./api/cardService";
-import Header from "./components/Header/Header";
 import Card from "./components/Card/Card";
 import SearchModal from "./components/SearchModal/SearchModal";
 import AnalyticsDashboard from "./components/AnalyticsDashboard/AnalyticsDashboard";
+import PersonalContext from "./components/PersonalContext/PersonalContext";
 // Global CSS should come before component-specific CSS
 import "./styles/global.css";
 import "./App.css";
+import { fetchPersonalContext } from "./api/personalContextService";
 
 function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [dashboardContent, setDashboardContent] = useState({
     session_id: "",
     name: "",
     context: "",
   });
+
+  const [formData, setFormData] = useState({
+    _id:"dfsdfd",
+    name: "sdads",
+    age: "",
+    city: "",
+    country: "",
+    occupation: "",
+    bio: "",
+    context:"",
+  });
+
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,7 +77,24 @@ function App() {
 
   return (
     <div className="container">
-      <Header />
+      <header className="header">
+        <h1 className="title">ContextWeaver</h1>
+        <div className="search-hint">press / to search through contexts</div>
+        <button
+        className="personal-context-button"
+          onClick={async () => {
+            try{
+              const response=await fetchPersonalContext()
+              setFormData(response)
+            }catch(e){
+              console.log(e);
+            }
+            setFormOpen(true);
+          }}
+        >
+          Personal Context
+        </button>
+      </header>
 
       {loading ? (
         <div className="loading-container">
@@ -93,6 +124,14 @@ function App() {
       <footer className="footer">ContextWeaver v1.0.0</footer>
 
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
+      {formOpen && (
+        <PersonalContext
+          onClose={() => setFormOpen(false)}
+          formData={formData}
+          setFormData={setFormData}
+        />
+      )}
+
       {dashboardOpen && (
         <AnalyticsDashboard
           onClose={() => setDashboardOpen(false)}
