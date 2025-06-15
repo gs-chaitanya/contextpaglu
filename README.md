@@ -1,6 +1,6 @@
-# FastAPI Application
+#ContextWeaver
+Context injection tool for LLMs.
 
-This is a simple FastAPI application.
 
 ## Requirements
 
