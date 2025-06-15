@@ -83,6 +83,28 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.scripting.executeScript({
       target: { tabId: tabs[0].id },
       func: () => {
+        function inferServiceAndConversationId(urlString) {
+      const url = new URL(urlString);
+      const hostname = url.hostname;
+      const pathSegments = url.pathname.split("/");
+
+      let service = "";
+      let conversationId = "";
+
+      if (hostname.includes("chatgpt.com")) {
+        service = "chatgpt";
+        conversationId = pathSegments[2] || "";
+      } else if (hostname.includes("claude.ai")) {
+        service = "claude";
+        conversationId = pathSegments[2] || "";
+      } else if (hostname.includes("gemini.google.com")) {
+        service = "gemini";
+        conversationId = pathSegments[2] || "";
+      }
+
+      return { service, conversationId };
+    }
+
         // Prevent re-initializing the observer if it's already running
         if (window.__domObserverRunning) return;
         window.__domObserverRunning = true;
@@ -134,10 +156,25 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             }
           }
 
-          // Extract conversation ID from URL
-          const serviceName = "ChatGPT";
-          const match = window.location.pathname.match(/\/c\/([\w-]+)/);
-          const conversationId = match ? match[1] : "unknown";
+          async function getSessionIdFromKey(key) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError.message);
+        return;
+      }
+      resolve(result[key] || null);
+    });
+  });
+}
+
+         const url = window.location.href;
+const { service, conversationId } = inferServiceAndConversationId(url);
+
+
+              const key = `${service}:${conversationId}`;
+              const sessionId = getSessionIdFromKey(key);
+              console.log("Session ID and key:", sessionId, key);
 
           // Create prompt-response pairs
           const pairCount = Math.min(userMessages.length, gptMessages.length);
@@ -152,16 +189,16 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 
           // Send the structured conversation data to the extension background
           if (conversationArray.length) {
-            chrome.runtime.sendMessage({
-              type: "conversation_scraped",
-              service: serviceName,
-              conversationId,
-              data: conversationArray
-            });
+           chrome.runtime.sendMessage({
+            type: "conversation_scraped",
+            service: service,
+            conversationId: conversationId,
+            data: conversationArray,
+          });
 
             window.__lastConversationJSON = conversationArray;
 
-            console.log(`[WebScraper] Service: ${serviceName}`);
+            console.log(`[WebScraper] Service: ${service}`);
             console.log(`[WebScraper] Conversation ID: ${conversationId}`);
             console.log("[WebScraper] Prompt-Response JSON:");
             console.log(JSON.stringify(conversationArray, null, 2));

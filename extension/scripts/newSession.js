@@ -5,7 +5,7 @@ const createBtn = document.getElementById("create");
 const sessionInput = document.getElementById("sessionName");
 const sessionList = document.getElementById("session-list");
 
-function inferServiceAndConversationId(urlString) {
+export function inferServiceAndConversationId(urlString) {
   const url = new URL(urlString);
   const hostname = url.hostname;
   const pathSegments = url.pathname.split("/");
@@ -55,6 +55,18 @@ function handleCheckboxChange(clicked) {
 
 // Handle Create/Append Session logic
 createBtn.addEventListener("click", async () => {
+  async function getSessionIdFromKey(key) {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get([key], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError.message);
+          return;
+        }
+        resolve(result[key] || null);
+      });
+    });
+  }
+
   const sessionName = sessionInput.value.trim();
 
   chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
@@ -73,7 +85,7 @@ createBtn.addEventListener("click", async () => {
       sessionId = response.sessionId;
       const key = `${service}:${conversationId}`;
       console.log("Creating new session with key:", key, "and sessionId:", sessionId);
-      
+
       chrome.storage.local.set({
         [key]: sessionId,
         service,
@@ -116,6 +128,29 @@ createBtn.addEventListener("click", async () => {
     chrome.scripting.executeScript({
       target: { tabId: tabs[0].id },
       func: () => {
+
+        function inferServiceAndConversationId(urlString) {
+          const url = new URL(urlString);
+          const hostname = url.hostname;
+          const pathSegments = url.pathname.split("/");
+
+          let service = "";
+          let conversationId = "";
+
+          if (hostname.includes("chatgpt.com")) {
+            service = "chatgpt";
+            conversationId = pathSegments[2] || "";
+          } else if (hostname.includes("claude.ai")) {
+            service = "claude";
+            conversationId = pathSegments[2] || "";
+          } else if (hostname.includes("gemini.google.com")) {
+            service = "gemini";
+            conversationId = pathSegments[2] || "";
+          }
+
+          return { service, conversationId };
+        }
+
         const match = window.location.pathname.match(/\/c\/([\w-]+)/);
         const conversationId = match ? match[1] : "unknown";
 
@@ -148,7 +183,7 @@ createBtn.addEventListener("click", async () => {
               const userDiv = el.querySelector("div.whitespace-pre-wrap");
               if (userDiv) userMessages.push(userDiv.textContent.trim());
             }
-            
+
             if (text.includes("ChatGPT said:")) {
               const gptEls = el.querySelectorAll("p, code");
               const combined = Array.from(gptEls)
@@ -167,21 +202,42 @@ createBtn.addEventListener("click", async () => {
               response: gptMessages[i],
             });
           }
-          const { service, conversationId } = inferServiceAndConversationId(
-      tabs[0].url
-    );
-    const key = `${service}:${conversationId}`;
-    const sessionId = await getSessionIdFromKey(key);
-          
+
+          async function getSessionIdFromKey(key) {
+            return new Promise((resolve, reject) => {
+              chrome.storage.local.get([key], (result) => {
+                if (chrome.runtime.lastError) {
+                  reject(chrome.runtime.lastError.message);
+                  return;
+                }
+                resolve(result[key] || null);
+              });
+            });
+          }
+          const url1 = window.location.href;
+          const { service, conversationId } = inferServiceAndConversationId(url1);
+          const key = `${service}:${conversationId}`;
+          async function myCallerFunction() {
+            const sessionId = await getSessionIdFromKey(key);
+            console.log("Session ID:", sessionId);
+          }
+          myCallerFunction();
+
+
+          const sessionId = await getSessionIdFromKey(key);
+          setTimeout(200);
+          console.log("Session ID and key:", sessionId, key);
+
           chrome.runtime.sendMessage({
             type: "conversation_scraped",
-            sessionId: sessionId,
+            service: service,
+            conversationId: conversationId,
             data: conversationArray,
           });
 
           console.log(`[WebScraper] Sent ${conversationArray.length} entries`);
           window.__lastConversationJSON = conversationArray;
-          console.log(`[WebScraper] Service: ${serviceName}`);
+          console.log(`[WebScraper] Service: ${service}`);
           console.log(`[WebScraper] Conversation ID: ${conversationId}`);
           console.log(`[WebScraper] Prompt-Response JSON: \n`, JSON.stringify(conversationArray, null, 2));
         };

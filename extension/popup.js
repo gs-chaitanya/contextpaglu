@@ -142,10 +142,19 @@ function createSessionListItem(sessionName, context) {
   return li;
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.type === "conversation_scraped") {
-    const { sessionId, data } = message;  // destructure sessionId and data from message
-
+    const { service, conversationId, data } = message;
+    const key = `${service}:${conversationId}`;
+    let sessionId = null;
+    async function myCallerFunction() {
+   sessionId = await getSessionIdFromKey(key);
+  console.log("Session ID:", sessionId);
+}
+await myCallerFunction();
+  // destructure sessionId and data from message
+    console.log("Received conversation data for session:", sessionId);
+    console.log(data);
     postConversationUpload(sessionId, data).then((result) => {
       if (result.success) {
         console.log("Conversation uploaded successfully.");
@@ -244,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const contextEl = document.getElementById("context-block");
             const degradationEl = document.getElementById("degradation-score");
             const idEl = document.getElementById("conversation-id");
+            console.log(sessionId);
             console.log(ctxRes);
             if (contextEl) contextEl.textContent = ctxRes.context;
             if (degradationEl)

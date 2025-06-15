@@ -120,7 +120,7 @@ async def walterwhite(workspace_name):
             "similarityThreshold": 0.7,
             "openAiTemp": 0.7,
             "openAiHistory": 20,
-            "openAiPrompt": "Custom prompt for responses",
+            "openAiPrompt": "for input in the form of a question and answer, return a concise and accuracte text that captures the context of the question and answer. Try minimizing the length of the response while retaining all relevant information.",
             "queryRefusalResponse": "Custom refusal message",
             "chatMode": "chat",
             "topN": 4
@@ -165,11 +165,13 @@ async def create_session(session_name):
 async def create_new_session_from_chat(session_name: str, service_name: str, conversation_id: str):
     try:
         session_id = client.create_new_session_from_chat(session_name, service_name, conversation_id)
+        workspace_name=f"{session_name}workspace"
+        await walterwhite(workspace_name)
         return {"session_id": session_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("find_session_by_chat/{service_name}/{conversation_id}")
+@app.get("/find_session_by_chat/{service_name}/{conversation_id}")
 async def find_session_by_chat(service_name: str, conversation_id: str):
     session_id = client.find_session_by_chat(service_name, conversation_id)
     if session_id:
@@ -276,22 +278,10 @@ async def send_chat_message( message: ChatMessage , session_id : str):
     session_name=client.get_session_name(session_id)
     workspace_name=f"{session_name}workspace"
     try:
-        # Verify session exists
-        # session = client.get_session(session_id)
-        # if not session:
-        #     raise HTTPException(status_code=404, detail="Session not found")
-        
         start_time = datetime.now()
         
         # Get context if available
         context_message = message.prompt
-        # if session.get("context_bucket_id"):
-        #     context_data = client.get_context(session["context_bucket_id"])
-        #     if context_data and context_data.get("context"):
-        #         context_message = f"Context: {context_data['context']}\n\nUser: {message.prompt}"
-        
-        # Send to AnythingLLM
-        # workspace_slug = session.get("workspace_slug", "hi")
         response = await anythingllm_client.make_request(
             "POST",
             f"/workspace/{workspace_name}/chat",

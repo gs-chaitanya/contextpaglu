@@ -1,71 +1,51 @@
 // apiWrapper.js
 
 export async function postSessionCheck(conversationId, service) {
-  // Dummy return for testing purposes
-  return false;
-
-  // Uncomment and use the real API call when backend is ready
-  /*
   try {
-    const response = await fetch("http://localhost:8000/check_session", {
-      method: "POST",
+    const response = await fetch(`http://localhost:8000/find_session_by_chat/${service}/${conversationId}`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        conversationId,
-        service,
-      }),
     });
 
     if (!response.ok) throw new Error("Network response was not ok");
 
     const data = await response.json();
-    return data.exists; // expecting { "exists": true } or false
+    return data.session_id && data.session_id !== ""; // returns true if session exists
   } catch (error) {
     console.error("API call failed:", error);
     return false;
   }
-  */
 }
 
 export async function createNewSession(sessionName, conversationId, service) {
-  // Dummy response for testing purposes
-  return {
-    success: true,
-    message: "Dummy session created successfully",
-    sessionId:"dummy-session-id-12345"
-  };
-
-  // Uncomment and use the real API call when backend is ready
-  /*
   try {
-    const response = await fetch("http://localhost:8000/create_session", {
+    const response = await fetch(`http://localhost:8000/create_new_session_from_chat?session_name=${encodeURIComponent(sessionName)}&service_name=${service}&conversation_id=${conversationId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        sessionName,
-        conversationId,
-        service,
-      }),
     });
 
     if (!response.ok) throw new Error("Network response was not ok");
 
     const data = await response.json();
-    return data; // expecting something like { "success": true, "message": "...", ... }
+    return {
+      success: true,
+      message: "Session created successfully",
+      sessionId: data.session_id
+    };
   } catch (error) {
     console.error("Create session API call failed:", error);
     return { success: false, error: error.message };
   }
-  */
 }
 // apiWrapper.js
 
 export async function postConversationUpload(sessionId, conversationJSON) {
   // Dummy response for development/testing
+  /*
   return {
     success: true,
     message: "Dummy upload successful",
@@ -73,87 +53,109 @@ export async function postConversationUpload(sessionId, conversationJSON) {
     conversationId,
     entriesUploaded: conversationJSON.length
   };
+  */
 
-  // Uncomment below for real API call
-  /*
+  // Real API call
   try {
-    const response = await fetch("http://localhost:8000/upload_conversation", {
+    // Stringify the entire conversation JSON into a single string
+    const conversationString = JSON.stringify(conversationJSON);
+
+    const response = await fetch(`http://localhost:8000/local/chat/${sessionId}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Authorization": "Bearer JQF2CXB-MJ3MTTH-N4E5ZAJ-R6T628Z",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        sessionId
-        conversation: conversationJSON, // e.g. [{ prompt: "...", response: "..." }, ...]
+        prompt:  conversationString,
+        mode: "chat"
       }),
     });
 
-    if (!response.ok) throw new Error("Network response was not ok");
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error:", errorData);
+    } else {
+      const data = await response.json();
+      console.log("Assistant response:", data.response);
+    }
+
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
     const data = await response.json();
-    return data; // expecting something like { "success": true, "message": "...", ... }
+    return {
+      success: true,
+      message: "Conversation upload successful",
+      entriesUploaded: conversationJSON.length,
+      response: data.response,
+      chat_data: data
+    };
   } catch (error) {
     console.error("Upload conversation API failed:", error);
     return { success: false, error: error.message };
   }
-  */
 }
 
 export async function getContextAndDegradation(sessionId) {
-  // Dummy response for development/testing
-  return {
-    success: true,
-    message: "Dummy context + degradation fetch successful",
-    context: "Q: What is AI?\nA: Artificial Intelligence is the simulation of human intelligence...",
-    degradationFactor: 0.12
-  };
-
-  // Uncomment below for real API call
-  /*
   try {
-    const response = await fetch("http://localhost:8000/get_context_and_degradation", {
-      method: "POST",
+    // Get context
+    const contextResponse = await fetch(`http://localhost:8000/get_context/${sessionId}`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sessionId}),
     });
 
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    return data; // expecting: { success: true, context: "string", degradationFactor: number }
+    if (!contextResponse.ok) throw new Error("Failed to fetch context");
+    
+    const contextData = await contextResponse.json();
+    
+    // For degradation, we need a sample prompt to calculate it
+    // Since there's no direct degradation endpoint without a prompt, we'll return a placeholder
+    // You might want to modify this based on your requirements
+    return {
+      success: true,
+      message: "Context and degradation fetch successful",
+      context: contextData.context,
+      degradationFactor: 0.0 // Placeholder - actual calculation requires a prompt
+    };
+    
   } catch (error) {
     console.error("Get context & degradation API failed:", error);
     return { success: false, error: error.message };
   }
-  */
 }
 
 export async function fetchAllSessions() {
-  // Dummy response for development/testing
-  return {
-    success: true,
-    sessions: [
-      { sessionName: "abc123", context: "AI Basics" },
-      { sessionName: "def456", context: "Philosophy Chat" },
-      { sessionName: "ghi789", context: "Code Review Session" }
-    ]
-  };
-  // Uncomment below for real API call
-  /*
   try {
-    const response = await fetch("http://localhost:8000/get_all_sessions"); // Replace with actual endpoint
+    const response = await fetch("http://localhost:8000/list_all_sessions", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    
     if (!response.ok) throw new Error("Network response was not ok");
 
-    const data = await response.json(); // expecting format: [{ sessionId, sessionName }, ...]
-    return { success: true, sessions: data };
+    const data = await response.json();
+    console.log(data);
+    // Transform the response to match expected format
+    const sessions = data.sessions.map(session => ({
+      sessionName: session[1], // Using session_id as sessionName
+      context: session[2] || "No description available" // Using session_name as context
+    }));
+    
+    return { success: true, sessions: sessions };
   } catch (error) {
     console.error("Fetch all sessions failed:", error);
     return { success: false, error: error.message };
   }
-  */
 }
+
+
 export async function postAppendSession(service, conversationId, sessionId) {
   // Dummy response for testing purposes
   return {
