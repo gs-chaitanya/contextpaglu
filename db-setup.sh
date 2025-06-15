@@ -8,13 +8,13 @@ docker run -d \
   -v couchdb-data:/opt/couchdb/data \
   couchdb
 
-curl -X PUT http://admin:password@localhost:5984/sessionDB \
+curl -X PUT http://admin:admin123@localhost:5984/session_db \
      -H "Content-Type: application/json" \
 
-curl -X PUT http://admin:password@localhost:5984/contextDB \
+curl -X PUT http://admin:admin123@localhost:5984/context_db \
      -H "Content-Type: application/json" \
 
-curl -X PUT http://admin:password@localhost:5984/chatDB \
+curl -X PUT http://admin:admin123@localhost:5984/chat_db \
      -H "Content-Type: application/json" \
      -d '{"partitioned": true}'
 

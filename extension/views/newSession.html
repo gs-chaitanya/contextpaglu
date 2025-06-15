@@ -1,5 +1,594 @@
 <div>
-  <h2>New Session</h2>
-  <input type="text" id="sessionName" placeholder="Name your session" />
-  <button id="create">Create</button>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.5;
+      min-width: 400px;
+      min-height: 600px;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 100%;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .header-content {
+      flex: 1;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Card styles */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .card-description {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input:disabled {
+      background: #f9fafb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Sessions list */
+    .sessions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .session-count {
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .sessions-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      transition: background-color 0.2s ease;
+      border-bottom: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+
+    .session-item:last-child {
+      border-bottom: none;
+    }
+
+    .session-item:hover {
+      background: #f1f5f9;
+    }
+
+    .session-item.selected {
+      background: #eff6ff;
+      border-color: #3b82f6;
+    }
+
+    .session-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .session-checkbox:checked {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    .session-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .session-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .session-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .session-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .session-id {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      color: #9ca3af;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    .divider span {
+      margin: 0 16px;
+    }
+
+    /* Action button */
+    .action-button {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 20px;
+    }
+
+    .action-button:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .action-button:active {
+      transform: translateY(0);
+    }
+
+    .action-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: #9ca3af;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .card {
+        padding: 16px;
+      }
+    }
+    /* Enhanced session item styles - Add to existingSession.html and newSession.html */
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  position: relative;
+  overflow: hidden;
+}
+
+.session-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.session-item:hover {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #3b82f6;
+}
+
+.session-item:hover::before {
+  opacity: 1;
+}
+
+.session-item.selected {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+}
+
+.session-item.selected::before {
+  opacity: 1;
+}
+
+.session-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.session-item:hover .session-icon {
+  transform: scale(1.1);
+}
+
+.session-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.session-id {
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+.session-service {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.session-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  background: white;
+  flex-shrink: 0;
+}
+
+.session-checkbox:checked {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.session-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Animation for new items */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.session-item {
+  animation: slideInUp 0.3s ease-out;
+}
+  </style>
+
+  
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">📝</div>
+      <div class="header-content">
+        <h1>Context Weaver</h1>
+        <div class="subtitle">Create or join a session</div>
+      </div>
+    </div>
+
+    <!-- Create New Session -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">✨</div>
+        <div>
+          <h2 class="card-title">Create New Session</h2>
+          <div class="card-description">Start a fresh context weaving session</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="sessionName">Session Name</label>
+        <input 
+          type="text" 
+          id="sessionName" 
+          class="form-input" 
+          placeholder="Enter a descriptive name for your session"
+        />
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <!-- Existing Sessions -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🗂️</div>
+        <div>
+          <div class="sessions-header">
+            <h2 class="card-title">Join Existing Session</h2>
+            <div class="session-count" id="session-count">0</div>
+          </div>
+          <div class="card-description">Continue with an existing context session</div>
+        </div>
+      </div>
+      <ul class="sessions-list" id="session-list">
+        <!-- Sessions will be populated by JavaScript -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon">📂</div>
+          <div class="empty-state-text">No existing sessions found</div>
+        </div>
+      </ul>
+    </div>
+
+    <!-- Action Button -->
+    <button class="action-button" id="create">
+      Create Session
+    </button>
+  </div>
+
+  <script>
+    // Update session count and empty state
+    function updateSessionList() {
+      const sessionItems = document.querySelectorAll('#session-list .session-item');
+      const countElement = document.getElementById('session-count');
+      const emptyState = document.getElementById('empty-state');
+      
+      if (countElement) {
+        countElement.textContent = sessionItems.length;
+      }
+      
+      if (emptyState) {
+        emptyState.style.display = sessionItems.length === 0 ? 'block' : 'none';
+      }
+    }
+
+    // Update button text based on selection
+    function updateButtonText() {
+      const button = document.getElementById('create');
+      const checkedBox = document.querySelector('#session-list input[type="checkbox"]:checked');
+      const sessionInput = document.getElementById('sessionName');
+      
+      if (button) {
+        if (checkedBox) {
+          button.textContent = 'Join Session';
+        } else if (sessionInput && sessionInput.value.trim()) {
+          button.textContent = 'Create Session';
+        } else {
+          button.textContent = 'Create Session';
+        }
+      }
+    }
+
+    // Monitor for changes
+    const sessionInput = document.getElementById('sessionName');
+    if (sessionInput) {
+      sessionInput.addEventListener('input', updateButtonText);
+    }
+
+    // Observer to watch for session list changes
+    const observer = new MutationObserver(() => {
+      updateSessionList();
+      updateButtonText();
+    });
+    
+    const sessionList = document.getElementById('session-list');
+    if (sessionList) {
+      observer.observe(sessionList, { childList: true, subtree: true });
+    }
+
+    // Initial update
+    updateSessionList();
+    updateButtonText();
+  </script>
 </div>

@@ -1,4 +1,4 @@
 /qcomm
-/app/__pycache__
-/app/db/__pycache__
-/hxth
+/app/__pycache_/*
+/app/db/__pycache__/*
+do.md

@@ -1,10 +1,521 @@
 <div>
-  <h2>Existing Session</h2>
-  <p id="conversation-id"></p>
-  <p id="degradation-score"></p>
-  <pre id="context-block" style="white-space: pre-wrap;"></pre>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  <hr />
-  <h3>All Sessions</h3>
-  <ul id="session-list" style="padding-left: 20px;"></ul>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.5;
+      min-width: 400px;
+      min-height: 600px;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 100%;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .header-content {
+      flex: 1;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #dcfce7;
+      color: #166534;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: #22c55e;
+      border-radius: 50%;
+    }
+
+    /* Card styles */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    /* Session Analytics */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #0f172a;
+      word-break: break-all;
+    }
+
+    .quality-score {
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    /* Context Preview */
+    .context-preview-wrapper {
+      position: relative;
+    }
+
+    .context-content {
+      margin-top: 0;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #475569;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 1px solid #e2e8f0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .context-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .context-content::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    .context-content::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .context-content::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Copy button styles */
+    .copy-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .copy-button:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .copy-button.copied {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .copy-button-icon {
+      font-size: 12px;
+    }
+
+    /* Sessions copy button */
+    .sessions-copy-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .sessions-copy-button:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .sessions-copy-button.copied {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .sessions-wrapper {
+      position: relative;
+    }
+
+    /* All Sessions */
+    .sessions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .session-count {
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .sessions-list {
+      list-style: none;
+      margin-top: 16px;
+    }
+
+    /* Enhanced session item styles */
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      position: relative;
+      overflow: hidden;
+      animation: slideInUp 0.3s ease-out;
+    }
+
+    .session-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .session-item:hover {
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: #3b82f6;
+    }
+
+    .session-item:hover::before {
+      opacity: 1;
+    }
+
+    .session-item.selected {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-color: #3b82f6;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .session-item.selected::before {
+      opacity: 1;
+    }
+
+    .session-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .session-checkbox:checked {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    .session-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      color: #64748b;
+    }
+
+    .session-item:hover .session-icon {
+      transform: scale(1.1);
+    }
+
+    .session-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .session-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .session-id {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 2px;
+    }
+
+    .session-service {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Individual session copy button */
+    .session-copy-button {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 10px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      opacity: 0;
+      transform: translateX(10px);
+    }
+
+    .session-item:hover .session-copy-button {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .session-copy-button:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .session-copy-button.copied {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .session-copy-button-icon {
+      font-size: 10px;
+    }
+
+    /* Animation for new items */
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+  
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">📝</div>
+      <div class="header-content">
+        <h1>Context Weaver</h1>
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          Active Session
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Analytics -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <h2 class="card-title">Session Analytics</h2>
+      </div>
+      <div class="analytics-grid">
+        <div class="metric">
+          <div class="metric-label">Conversation ID</div>
+          <div class="metric-value" id="conversation-id"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Context Quality</div>
+          <div class="metric-value quality-score" id="degradation-score">%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Preview -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📄</div>
+        <h2 class="card-title">Context Preview</h2>
+      </div>
+      <div class="context-preview-wrapper">
+        <button class="copy-button" id="copy-context-btn">
+          <span class="copy-button-icon">📋</span>
+          <span class="copy-button-text">Copy</span>
+        </button>
+        <div class="context-content" id="context-block">
+        </div>
+      </div>
+    </div>
+
+    <!-- All Sessions -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🗂️</div>
+        <div class="sessions-header">
+          <h2 class="card-title">All Sessions</h2>
+        </div>
+      </div>
+      <div class="sessions-wrapper">
+        <ul class="sessions-list" id="session-list">
+          <!-- Session items will be dynamically populated here -->
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>

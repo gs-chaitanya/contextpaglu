@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Header, status
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import httpx
@@ -16,6 +17,17 @@ app = FastAPI(
     description="CouchDB-based server with AnythingLLM integration",
     version="2.0.0"
 )
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 client = Client()
 
@@ -89,7 +101,6 @@ async def health_check():
         "database_schema": "couchdb_partitioned",
         "databases": {
             "sessionDB": True,
-            "contextDB": True,
             "chatDB": True,
             "configDB": True
         }
@@ -169,7 +180,7 @@ async def update_session_name(session_id: str, payload: SessionRename):
 async def delete_session(session_id: str):
     try:
         client.delete_session(session_id)
-        return {"message": "Session and associated context deleted"}
+        return {"message": "Session deleted"}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -190,10 +201,6 @@ async def update_context(session_id: str, payload: ContextUpdate):
         return {"message": "Context updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-@app.post("/update-context")
-async def update_context(newchat: str = Header(None)):
-    return {"status": "Context updated"}
 
 @app.post("/evaluate_context")
 async def evaluate_context(newchat: str = Header(None)):
