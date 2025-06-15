@@ -155,6 +155,21 @@ async def create_session(session_name):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/create_new_session_from_chat")
+async def create_new_session_from_chat(session_name: str, service_name: str, conversation_id: str):
+    try:
+        session_id = client.create_new_session_from_chat(session_name, service_name, conversation_id)
+        return {"session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("find_session_by_chat/{service_name}/{conversation_id}")
+async def find_session_by_chat(service_name: str, conversation_id: str):
+    session_id = client.find_session_by_chat(service_name, conversation_id)
+    if session_id:
+        return {"session_id": session_id}
+    else:
+        return {"session_id":""}
 
 @app.get("/list_all_sessions")
 async def list_all_sessions():
