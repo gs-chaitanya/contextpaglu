@@ -26,7 +26,17 @@ function inferServiceAndConversationId(urlString) {
 
   return { service, conversationId };
 }
-
+export async function getSessionIdFromKey(key) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError.message);
+        return;
+      }
+      resolve(result[key] || null);
+    });
+  });
+}
 // Disable input if a session is selected
 function updateInputState() {
   const anyChecked = sessionList.querySelector("input[type='checkbox']:checked");
@@ -60,12 +70,12 @@ createBtn.addEventListener("click", async () => {
       // Create a new session
       response = await createNewSession(sessionName, conversationId, service);
       if (!response.success) return alert("Failed to create session: " + (response.error || "Unknown error"));
-
-      sessionId = response.sessionId || conversationId;
+      sessionId = response.sessionId;
       const key = `${service}:${conversationId}`;
-
+      console.log("Creating new session with key:", key, "and sessionId:", sessionId);
+      
       chrome.storage.local.set({
-        [key]: true,
+        [key]: sessionId,
         service,
         conversationId,
         sessionName,
@@ -80,12 +90,13 @@ createBtn.addEventListener("click", async () => {
 
       if (!sessionId) return alert("Unable to find session ID.");
 
-      response = await postAppendSession(service, conversationId, sessionId);
-      if (!response.success) return alert("Failed to append session: " + (response.error || "Unknown error"));
+      // response = await postAppendSession(service, conversationId, sessionId);
+      // if (!response.success) return alert("Failed to append session: " + (response.error || "Unknown error"));
 
       const key = `${service}:${conversationId}`;
+      sessionId = response.sessionId;
       chrome.storage.local.set({
-        [key]: true,
+        [key]: sessionId,
         service: service,
         conversationId: conversationId,
         sessionName: li.textContent.split("(")[0].trim(),
@@ -114,15 +125,15 @@ createBtn.addEventListener("click", async () => {
 
         console.log("DOM Scraper Running Once");
 
-        const processEntireDOM = () => {
+        const processEntireDOM = async () => {
           const url = window.location.hostname;
           let serviceName = "Unknown";
-          if (url.includes("chatgpt.com")) serviceName = "ChatGPT";
-          else if (url.includes("gemini.google.com")) serviceName = "Gemini";
-          else if (url.includes("claude.ai")) serviceName = "Claude";
+          if (url.includes("chatgpt.com")) serviceName = "chatgpt";
+          else if (url.includes("gemini.google.com")) serviceName = "gemini";
+          else if (url.includes("claude.ai")) serviceName = "claude";
 
           const match = window.location.pathname.match(/\/c\/([\w-]+)/);
-          const conversationId = match ? match[1] : "unknown";
+          // const conversationId = match ? match[1] : "unknown";
 
           const containers = Array.from(
             document.querySelectorAll(".text-token-text-primary.w-full")
@@ -137,7 +148,7 @@ createBtn.addEventListener("click", async () => {
               const userDiv = el.querySelector("div.whitespace-pre-wrap");
               if (userDiv) userMessages.push(userDiv.textContent.trim());
             }
-
+            
             if (text.includes("ChatGPT said:")) {
               const gptEls = el.querySelectorAll("p, code");
               const combined = Array.from(gptEls)
@@ -156,11 +167,15 @@ createBtn.addEventListener("click", async () => {
               response: gptMessages[i],
             });
           }
-
+          const { service, conversationId } = inferServiceAndConversationId(
+      tabs[0].url
+    );
+    const key = `${service}:${conversationId}`;
+    const sessionId = await getSessionIdFromKey(key);
+          
           chrome.runtime.sendMessage({
             type: "conversation_scraped",
-            service: serviceName,
-            conversationId,
+            sessionId: sessionId,
             data: conversationArray,
           });
 

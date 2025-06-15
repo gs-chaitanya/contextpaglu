@@ -34,9 +34,7 @@ export async function createNewSession(sessionName, conversationId, service) {
   return {
     success: true,
     message: "Dummy session created successfully",
-    sessionName,
-    conversationId,
-    service,
+    sessionId:"dummy-session-id-12345"
   };
 
   // Uncomment and use the real API call when backend is ready
@@ -66,7 +64,7 @@ export async function createNewSession(sessionName, conversationId, service) {
 }
 // apiWrapper.js
 
-export async function postConversationUpload(service, conversationId, conversationJSON) {
+export async function postConversationUpload(sessionId, conversationJSON) {
   // Dummy response for development/testing
   return {
     success: true,
@@ -85,8 +83,7 @@ export async function postConversationUpload(service, conversationId, conversati
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        service,
-        conversationId,
+        sessionId
         conversation: conversationJSON, // e.g. [{ prompt: "...", response: "..." }, ...]
       }),
     });
@@ -102,7 +99,7 @@ export async function postConversationUpload(service, conversationId, conversati
   */
 }
 
-export async function getContextAndDegradation(service, conversationId) {
+export async function getContextAndDegradation(sessionId) {
   // Dummy response for development/testing
   return {
     success: true,
@@ -119,7 +116,7 @@ export async function getContextAndDegradation(service, conversationId) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ service, conversationId }),
+      body: JSON.stringify({ sessionId}),
     });
 
     if (!response.ok) throw new Error("Network response was not ok");
