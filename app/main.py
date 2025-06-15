@@ -226,12 +226,13 @@ async def get_context(session_id: str, payload: ChatResponse):
 
         # Calculate semantic coherence
         coherence_score = semantic_coherence(current_embedding, global_context)
+        degradation_score = 1.0 - coherence_score  # Inverse of coherence
 
         #threshold = 0.5  # Example threshold for coherence
 
         return {
             "prompt": payload.prompt,
-            "coherence_score": coherence_score
+            "degradation_score": degradation_score
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
