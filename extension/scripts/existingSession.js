@@ -26,10 +26,15 @@
       copyToClipboard(contextContent, this);
     });
 
-    document.getElementById('copy-sessions-btn').addEventListener('click', function() {
-      const contextContent = document.getElementById('session-context').textContent;
-      copyToClipboard(contextContent, this);
-    });
+    const copyContextBtn = document.getElementById("copy-context-btn");
+if (copyContextBtn) {
+  copyContextBtn.addEventListener("click", () => {
+    copyToClipboard(ctxRes.context, copyContextBtn);
+  });
+} else {
+  console.warn("copy-context-btn element not found!");
+}
+
     
 
     // Update session count when sessions are loaded

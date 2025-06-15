@@ -26,22 +26,38 @@ function inferServiceAndConversationId(urlString) {
   return { service, conversationId };
 }
 
+export async function getSessionIdFromKey(key) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError.message);
+        return;
+      }
+      resolve(result[key] || null);
+    });
+  });
+}
+
 // Utility: Copy text to clipboard with visual feedback
 async function copyToClipboard(text, buttonElement) {
   try {
     await navigator.clipboard.writeText(text);
-    
+
     // Visual feedback
-    const originalText = buttonElement.querySelector('.session-copy-button-text').textContent;
-    buttonElement.classList.add('copied');
-    buttonElement.querySelector('.session-copy-button-text').textContent = 'Copied!';
-    
+    const originalText = buttonElement.querySelector(
+      ".session-copy-button-text"
+    ).textContent;
+    buttonElement.classList.add("copied");
+    buttonElement.querySelector(".session-copy-button-text").textContent =
+      "Copied!";
+
     setTimeout(() => {
-      buttonElement.classList.remove('copied');
-      buttonElement.querySelector('.session-copy-button-text').textContent = originalText;
+      buttonElement.classList.remove("copied");
+      buttonElement.querySelector(".session-copy-button-text").textContent =
+        originalText;
     }, 2000);
   } catch (err) {
-    console.error('Failed to copy text: ', err);
+    console.error("Failed to copy text: ", err);
   }
 }
 
@@ -72,7 +88,8 @@ function createSessionListItem(sessionName, context) {
   // Create session ID (using context as ID)
   const sessionIdDiv = document.createElement("div");
   sessionIdDiv.className = "session-id";
-  sessionIdDiv.textContent = context.length > 50 ? context.substring(0, 50) + "..." : context;
+  sessionIdDiv.textContent =
+    context.length > 50 ? context.substring(0, 50) + "..." : context;
 
   // Create session service label (optional)
   const sessionServiceDiv = document.createElement("div");
@@ -93,23 +110,27 @@ function createSessionListItem(sessionName, context) {
   `;
 
   // Add copy functionality
-  copyButton.addEventListener('click', (e) => {
+  copyButton.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     copyToClipboard(context, copyButton);
   });
 
   // Add click handler for the entire item (optional selection behavior)
-  li.addEventListener('click', (e) => {
-    if (e.target !== checkbox && e.target !== copyButton && !copyButton.contains(e.target)) {
+  li.addEventListener("click", (e) => {
+    if (
+      e.target !== checkbox &&
+      e.target !== copyButton &&
+      !copyButton.contains(e.target)
+    ) {
       checkbox.checked = !checkbox.checked;
-      li.classList.toggle('selected', checkbox.checked);
+      li.classList.toggle("selected", checkbox.checked);
     }
   });
 
   // Add checkbox change handler
-  checkbox.addEventListener('change', () => {
-    li.classList.toggle('selected', checkbox.checked);
+  checkbox.addEventListener("change", () => {
+    li.classList.toggle("selected", checkbox.checked);
   });
 
   // Final assembly
@@ -121,14 +142,11 @@ function createSessionListItem(sessionName, context) {
   return li;
 }
 
-// Listener: Handles messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "conversation_scraped") {
-    const { service, conversationId, data } = message;
-    console.log("Received scraped conversation data:", data);
+    const { sessionId, data } = message;  // destructure sessionId and data from message
 
-    // Upload conversation data to backend
-    postConversationUpload(service, conversationId, data).then((result) => {
+    postConversationUpload(sessionId, data).then((result) => {
       if (result.success) {
         console.log("Conversation uploaded successfully.");
       } else {
@@ -136,9 +154,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
 
-    return true; // Keep sendResponse alive for async work
+    return true; // Keep sendResponse alive for async response if needed
   }
 });
+
 
 // Main: Runs when popup is loaded
 document.addEventListener("DOMContentLoaded", () => {
@@ -179,6 +198,14 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Session found via API."
             : "New session detected via API."
         );
+        if (sessionExists) {
+          chrome.storage.local.set({
+            [key]: sessionId,
+            service,
+            conversationId,
+            sessionName,
+          });
+        }
       }
 
       // Step 2: Choose which UI to load (existing vs new session)
@@ -205,7 +232,14 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(async () => {
         if (sessionExists) {
           // Fetch context and degradation score for the current conversation
-          const ctxRes = await getContextAndDegradation(service, conversationId);
+          const { service, conversationId } = inferServiceAndConversationId(
+            tabs[0].url
+          );
+          const key = `${service}:${conversationId}`;
+          const sessionId = await getSessionIdFromKey(key);
+          const ctxRes = await getContextAndDegradation(
+            sessionId
+          );
           if (ctxRes.success) {
             const contextEl = document.getElementById("context-block");
             const degradationEl = document.getElementById("degradation-score");
@@ -213,13 +247,15 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log(ctxRes);
             if (contextEl) contextEl.textContent = ctxRes.context;
             if (degradationEl)
-              degradationEl.textContent = `${ctxRes.degradationFactor.toFixed(2)}%`;
+              degradationEl.textContent = `${ctxRes.degradationFactor.toFixed(
+                2
+              )}%`;
             if (idEl) idEl.textContent = conversationId;
 
             // Add copy functionality for context block
             const copyContextBtn = document.getElementById("copy-context-btn");
             if (copyContextBtn) {
-              copyContextBtn.addEventListener('click', () => {
+              copyContextBtn.addEventListener("click", () => {
                 copyToClipboard(ctxRes.context, copyContextBtn);
               });
             }
@@ -234,16 +270,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const listContainer = document.getElementById("session-list");
           if (listContainer) {
             // Clear existing content
-            listContainer.innerHTML = '';
-            
+            listContainer.innerHTML = "";
+
             // Add session count
             const sessionCount = document.createElement("div");
             sessionCount.className = "session-count";
             sessionCount.textContent = sessionsRes.sessions.length;
-            
+
             // Update header if it exists
             const sessionsHeader = document.querySelector(".sessions-header");
-            if (sessionsHeader && !sessionsHeader.querySelector(".session-count")) {
+            if (
+              sessionsHeader &&
+              !sessionsHeader.querySelector(".session-count")
+            ) {
               sessionsHeader.appendChild(sessionCount);
             }
 
