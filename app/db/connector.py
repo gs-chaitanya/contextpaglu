@@ -5,6 +5,7 @@ import pycouchdb
 import uuid
 import requests
 import asyncio
+import httpx
 
 
 class Client:
@@ -26,6 +27,79 @@ class Client:
     
     def update_personal_context(self,new_doc):
         self.sessionDB.save(new_doc)
+
+
+    async def get_personal_context_from_json(personal_info: dict) -> dict:
+        """
+        Convert personal information from JSON to a string and send it to the API endpoint
+        
+        Args:
+            personal_info (dict): Dictionary containing personal information with keys:
+                - name: str
+                - age: int
+                - city: str
+                - country: str
+                - occupation: str
+                - bio: str (optional)
+        
+        Returns:
+            dict: API response
+        """
+        try:
+            # Validate required fields
+            required_fields = ['name', 'age', 'city', 'country', 'occupation']
+            for field in required_fields:
+                if field not in personal_info:
+                    raise ValueError(f"Missing required field: {field}")
+            
+            # Format the personal information as a natural language string
+            context_string = (
+                f"My name is {personal_info['name']}. "
+                f"I am {personal_info['age']} years old. "
+                f"I live in {personal_info['city']}, {personal_info['country']}. "
+                f"I work as a {personal_info['occupation']}. "
+            )
+            
+            # Add bio if provided
+            if 'bio' in personal_info and personal_info['bio']:
+                context_string += f"About me: {personal_info['bio']}"
+            
+            # Prepare the API request
+            url = "http://localhost:3001/api/v1/workspace/crazy/chat"
+            headers = {
+                "Authorization": f"Bearer JQF2CXB-MJ3MTTH-N4E5ZAJ-R6T628Z",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "message": context_string,
+                "mode": "chat"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                
+                return {
+                    "success": True,
+                    "context": context_string,
+                    "response": response.json()
+                }
+                
+        except ValueError as ve:
+            return {
+                "success": False,
+                "error": str(ve)
+            }
+        except httpx.HTTPError as he:
+            return {
+                "success": False,
+                "error": f"HTTP error occurred: {str(he)}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"An unexpected error occurred: {str(e)}"
+            }
 
     ## SESSIONS
         
@@ -193,4 +267,3 @@ if __name__=="__main__":
     # client.add_chat("fe51eea2c06c4e3582552726236d7dd4","eeee","EEEEE")
     resp=client.get_all_chats_by_session_id("fe51eea2c06c4e3582552726236d7dd4")
     print(resp)
-    

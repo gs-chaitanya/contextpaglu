@@ -130,8 +130,6 @@ async def walterwhite(workspace_name):
     )
     return response 
 
-
-
 @app.get("/config")
 async def get_config():
     """Get current configuration"""
