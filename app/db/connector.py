@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 from typing import Dict, List
+from imagine import ChatMessage, ImagineClient
 import pycouchdb
 import uuid
 import requests
@@ -14,6 +15,16 @@ class Client:
         self.sessionDB=self.server.database("session_db")
         self.chatDB=self.server.database("chat_db")
         self.personalContextDB=self.server.database("personal_context_db")
+        self.imagineClient=client = ImagineClient(api_key="f66499e9-2d54-4adf-85c1-5c9d67a13b1b",
+                                                  endpoint="http://10.190.147.82:5050/")
+    
+    def translate(self, text, target_language="hi-IN"):
+        response = self.imagineClient.chat(
+        messages=[
+                ChatMessage(role="user", content=f"translate {text} to hindi (hi-IN), only return the translated text")],
+                model="Sarvam-m"
+            )
+        return response.first_content
     
     def query(self,relative_url):
         resp=requests.get(self.url+relative_url)

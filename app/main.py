@@ -151,6 +151,16 @@ async def configure_api_key(config: ApiKeyConfig):
         raise HTTPException(status_code=500, detail="Failed to configure API key")
 
 
+@app.get("/translate/{text}")
+def translate_text(text: str, target_language: str = "hi-IN"):
+    """Translate text to a specified language (currently set to hindi)"""
+    try:
+        translated_text = client.translate(text, target_language)
+        return {"translated_text": translated_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/get_personal_context")
 def get_personal_context():
     try:
