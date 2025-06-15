@@ -323,7 +323,7 @@ async def send_chat_message( message: ChatMessage , session_id : str):
         
         # Update session timestamp
         # client.update_session_timestamp(session_id)
-        
+        client.update_context_for_session(session_id, assistant_response)
         return {
             # "chat_id": chat_id,
             "local_llm_session_id": session_id,
