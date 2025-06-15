@@ -1,9 +1,6 @@
 /qcomm
-/app/__pycache_/*
-/app/db/__pycache__/*
+/app/__pycache_/
+/app/db/__pycache__/
 do.md
-<<<<<<< Updated upstream
 /hxth
-=======
 key
->>>>>>> Stashed changes
